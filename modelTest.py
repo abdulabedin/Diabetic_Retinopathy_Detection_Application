@@ -10,93 +10,62 @@ from tensorflow.keras.preprocessing.image import ImageDataGenerator
 import gdown
 import requests
 
-st.title("Welcome to the DR Classification App")
+# Set page configuration
+st.set_page_config(layout="wide")
 
-st.link_button("Go to Model", "https://www.kaggle.com/code/abdulabedin/cps843-project/edit")
+
+st.title("Diabetic Retinopathy Classification Application")
+
+st.markdown("""
+Welcome to the Diabetic Retinopathy Classification App!  
+- **Sample Prediction**: Test the model on a predefined sample image.  
+- **Try It Yourself**: Upload your own image to get a prediction.  
+- **Test Model Accuracy**: Upload a ZIP file with images to evaluate the model's accuracy.  
+""")
 
 # Define the mapping of class indices to severity levels
 severity_levels = ["No_DR", "Mild", "Moderate", "Proliferate_DR", "Severe"]
 
-# def test_model(model_name, test_dir):
-#     model = load_model(model_name)
-#     # print(model.summary())
 
-#     # Load and predict for each transformed image in test_dir
-#     images = os.listdir(test_dir)
+# CSS for consistent height across columns
+st.markdown(
+    """
+    <style>
+    .column-container {
+        display: flex;
+        justify-content: space-between;
+    }
+    .column-box {
+        background-color: #262730;
+        padding: 20px;
+        border-radius: 10px;
+        flex: 1;
+        min-height: 100px; /* Adjust this height to match your needs */
+        height: auto;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+    .column-box h3 {
+        text-align: center;
+        color: white;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
 
-#     for img_name in images:
-#         # Only process transformed images (assuming they have a suffix)
-#         print(img_name)
-#         image_path = os.path.join(test_dir, img_name)
+def extract_images(zip_path, extract_to, valid_extensions):
+    with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+        for file in zip_ref.namelist():
+            # Check if the file is an image
+            if file.lower().endswith(valid_extensions) and not file.startswith("__MACOSX/") and not file.startswith("._"):
+                # Extract the file while preserving the subdirectory structure
+                zip_ref.extract(file, extract_to)
 
-#         # Load and preprocess the image
-#         img = image.load_img(image_path, target_size=(224, 224))
-#         img_array = image.img_to_array(img) / 255.0  # Convert to array and scale
-#         img_array = np.expand_dims(img_array, axis=0)  # Add batch dimension
-
-#         # Predict the category
-#         prediction = model.predict(img_array)
-#         predicted_class_index = np.argmax(prediction[0])  # Get index of the highest probability
-#         accuracy = prediction[0][predicted_class_index]  # Get the highest probability (confidence)
-
-#         # Map the predicted class index to the severity level
-#         predicted_severity = severity_levels[predicted_class_index]
-
-#         # Print the desired output
-
-#         st.write(f"Image: {img_name} - Predicted Severity: {predicted_severity} - Accuracy: {accuracy:.2%}")
-
-
-# def test_model(model_name, test_dir):
-
-#     with st.spinner('Wait for it...'):
-
-#         model = load_model(model_name)
-#         # print(model.summary())
-
-#         # Create the test data generator with only rescaling
-#         test_datagen = ImageDataGenerator(rescale=1.0/255.0)
-
-#         # Create the test generator
-#         test_generator = test_datagen.flow_from_directory(
-#             test_dir,
-#             target_size=(224, 224),
-#             batch_size=32,
-#             class_mode='categorical',
-#             shuffle=False  # No shuffling for evaluation
-#         )
-
-#         # Evaluate the model on the test set
-#         test_loss, test_accuracy = model.evaluate(test_generator, steps=test_generator.samples // 32)
-#     st.write(f'Test accuracy: {test_accuracy:.4f}')
-#     st.write(f'Test loss: {test_loss:.4f}')
-
-
-# def download_model_from_drive():
-#     file_id = "1RIeCpOTzQTrTKE-jT-Vtpjx5vlsRRzoP"  # Replace with your file ID
-#     url = f"https://drive.google.com/uc?id={file_id}"
-#     output = "dr_classification_model.h5"
-
-#     if not os.path.exists(output):
-#         with st.spinner('Downloading Latest model...'):
-#             gdown.download(url, output, quiet=False)
-#             st.success("Download complete")
-#     return output
-
-
-# model_file = download_model_from_drive() 
-
-
-url = "https://detectionmodel.s3.us-east-1.amazonaws.com/dr_classification_model.h5"
-model_path = "dr_classification_model.h5"
-
-if not os.path.exists(model_path):
-    with open(model_path, "wb") as f:
-        response = requests.get(url)
-        f.write(response.content)
 
 def test_model(model_name, test_dir):
-    with st.spinner('Wait for it...'):
+    with st.spinner('Evaluating model accuracy on uploaded images...'):
         # Load the model
         model = load_model(model_name)
 
@@ -129,13 +98,165 @@ def test_model(model_name, test_dir):
         # Display the results
         st.write("Prediction Results:")
         for image_path, actual, predicted, confidence in results:
-            st.write(f"Image: {image_path}, Actual Category: {actual}, Predicted Category: {predicted}, Confidence: {confidence:.2%}")
-            st.write("---")
+                   st.markdown(
+            f"""
+            <div class="column-box">
+                <ul>
+                <li>
+                    <strong>Image:</strong> {image_path} |
+                    <strong>Actual Category:</strong> {actual_class} |
+                    <strong>Predicted Category:</strong> {predicted_class} |
+                    <strong>Confidence:</strong> {confidence:.2%}
+                </li>
+                </ul>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+            # st.write(f"Image: {image_path}, Actual Category: {actual}, Predicted Category: {predicted}, Confidence: {confidence:.2%}")
+            # st.write("---")
 
         # Calculate and display overall accuracy and loss
         test_loss, test_accuracy = model.evaluate(test_generator, steps=test_generator.samples // 32)
-        st.write(f'Test accuracy: {test_accuracy:.4f}')
-        st.write(f'Test loss: {test_loss:.4f}')
+
+        st.markdown(
+            f"""
+            <div class="column-box">
+                <ul>
+                    <li><strong>Test accuracy:</strong> {test_accuracy:.4f}</li>
+                    <li><strong>Test loss:</strong> {test_loss:.4f}%</li>
+                </ul>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+def test_model_Single(model_name, test_dir):
+    model = load_model(model_name)
+    # print(model.summary())
+
+    # Load and predict for each transformed image in test_dir
+    images = os.listdir(test_dir)
+
+    for img_name in images:
+        # Only process transformed images (assuming they have a suffix)
+        print(img_name)
+        image_path = os.path.join(test_dir, img_name)
+
+        # Load and preprocess the image
+        img = image.load_img(image_path, target_size=(224, 224))
+        img_array = image.img_to_array(img) / 255.0  # Convert to array and scale
+        img_array = np.expand_dims(img_array, axis=0)  # Add batch dimension
+
+        # Predict the category
+        prediction = model.predict(img_array)
+        predicted_class_index = np.argmax(prediction[0])  # Get index of the highest probability
+        accuracy = prediction[0][predicted_class_index]  # Get the highest probability (confidence)
+
+        # Map the predicted class index to the severity level
+        predicted_severity = severity_levels[predicted_class_index]
+
+        # Print the desired output
+
+        st.markdown(
+            f"""
+            <div class="column-box">
+                <strong>Prediction Results:</strong><br>
+                <ul>
+                    <li><strong>Severity Level:</strong> {predicted_severity}</li>
+                    <li><strong>Confidence:</strong> {accuracy:.2%}%</li>
+                </ul>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+
+model_file = "dr_classification_model.h5"
+
+# **1. Sample Prediction**
+st.header("Sample Prediction")
+st.image("0dc031c94225-gamma.png", caption="Sample Image")
+if st.button("Run Prediction", key="sample"):
+     with st.spinner('Running prediction on the sample image...'):
+        if os.path.exists("test"):
+            import shutil
+            shutil.rmtree("test")
+        os.makedirs("test")
+
+            # Save the uploaded image to the `test` directory
+        image_path = os.path.join("test", "uploaded_image.png")
+        shutil.copy("0dc031c94225-gamma.png", image_path)
+
+        model_file = "dr_classification_model.h5"  # Replace with your model file path
+        test_model_Single(model_file, "test")
+
+
+# **2. Try It Yourself**
+st.header("Try It Yourself")
+uploaded_image = st.file_uploader("Choose an image:", type=["jpg", "jpeg", "png"])
+if uploaded_image:
+    st.success("Image successfully uploaded")
+    st.image(uploaded_image, caption="Uploaded Image")
+    if st.button("Predict", key="user-upload"):
+        with st.spinner('Running prediction on the uploaded image...'):
+            if os.path.exists("test"):
+                import shutil
+                shutil.rmtree("test")
+            os.makedirs("test")
+
+            # Save the uploaded image to the `test` directory
+            image_path = os.path.join("test", "uploaded_image.png")
+            with open(image_path, "wb") as f:
+                f.write(uploaded_image.getbuffer())
+
+            test_model_Single(model_file, "test")
+
+
+# **3. Test Model Accuracy**
+
+st.header("Test Model Accuracy")
+uploaded_zip = st.file_uploader("Upload a ZIP file with images:", type=["zip"])
+if uploaded_zip:
+    st.success("ZIP file successfully uploaded")
+
+    if st.button("Evaluate Accuracy", key="test-accuracy"):
+
+            zip_path = "uploaded.zip"
+            with open(zip_path, "wb") as f:
+                f.write(uploaded_zip.getbuffer())
+
+            # Clear or recreate the `test` directory
+            if os.path.exists("test"):
+                import shutil
+                shutil.rmtree("test")
+
+            # Extract only image files
+            valid_extensions = (".jpg", ".jpeg", ".png")
+            extract_images(zip_path, "", valid_extensions)
+            st.success("Images extracted to 'test' directory")
+
+            # Display extracted images
+            images = [img for img in os.listdir("test") if img.lower().endswith(valid_extensions)]
+
+            # Load and test the model on the extracted images
+            test_model(model_file, "test")
+             
+
+st.text("")
+st.text("")
+st.text("")
+
+st.link_button("Go to Model", "https://www.kaggle.com/code/abdulabedin/cps843-project/edit")
+
+
+url = "https://detectionmodel.s3.us-east-1.amazonaws.com/dr_classification_model.h5"
+model_path = "dr_classification_model.h5"
+
+if not os.path.exists(model_path):
+    with open(model_path, "wb") as f:
+        response = requests.get(url)
+        f.write(response.content)
 
 
 # Usage example
@@ -143,70 +264,3 @@ if __name__ == "__main__":
     test_dir = 'test'
     model_file = "dr_classification_model.h5"
     
-    # Run predictions on transformed images
-    # test_model(model_file, test_dir)
-
-
-
-    
-
-# File uploader for ZIP files
-uploaded_file = st.file_uploader("Upload a ZIP file with images", type=["zip"])
-
-
-# def extract_images(zip_path, extract_to, valid_extensions):
-#     with zipfile.ZipFile(zip_path, 'r') as zip_ref:
-#         for file in zip_ref.namelist():
-#             # Check if the file is an image
-#             if file.lower().endswith(valid_extensions) and not file.startswith("__MACOSX/") and not file.startswith("._"):
-#                 # Extract the file to a temporary location
-#                 extracted_path = zip_ref.extract(file, extract_to)
-                
-#                 # Move the file to the main directory, ignoring subfolders
-#                 file_name = os.path.basename(extracted_path)  # Get only the file name
-#                 final_path = os.path.join(extract_to, file_name)
-                
-#                 # Rename/move the file to remove subdirectory structure
-#                 os.rename(extracted_path, final_path)
-
-def extract_images(zip_path, extract_to, valid_extensions):
-    with zipfile.ZipFile(zip_path, 'r') as zip_ref:
-        for file in zip_ref.namelist():
-            # Check if the file is an image
-            if file.lower().endswith(valid_extensions) and not file.startswith("__MACOSX/") and not file.startswith("._"):
-                # Extract the file while preserving the subdirectory structure
-                zip_ref.extract(file, extract_to)
-
-
-if uploaded_file is not None:
-    # Save ZIP file to current directory
-    zip_path = "uploaded.zip"
-    with open(zip_path, "wb") as f:
-        f.write(uploaded_file.getbuffer())
-    st.success("ZIP file successfully uploaded")
-
-    # Clear or recreate the `test` directory
-    if os.path.exists("test"):
-        import shutil
-        shutil.rmtree("test")
-    # os.makedirs("test")
-
-    # Extract only image files
-    valid_extensions = (".jpg", ".jpeg", ".png")
-    extract_images(zip_path, "", valid_extensions)
-    st.success("Images extracted to 'test' directory")
-
-    # Display extracted images
-    images = [img for img in os.listdir("test") if img.lower().endswith(valid_extensions)]
-    # st.write("Uploaded Images:")
-    # for img_name in images:
-    #     img_path = os.path.join("test", img_name)
-        # st.image(img_path, caption=img_name, use_column_width=True)
-
-    # Load and test the model on the extracted images
-    model_file = "dr_classification_model.h5"  # Replace with your model file path
-    test_model(model_file, "test")
-
-
-# data = pd.read_csv('train.csv')
-# st.write(data)
