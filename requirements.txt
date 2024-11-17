@@ -6,3 +6,4 @@ tensorboard==2.18.0
 tensorboard-data-server==0.7.2
 tensorflow==2.18.0
 gdown==4.7.1
+requests==2.32.3
