@@ -8,7 +8,7 @@ import os
 import zipfile
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 import gdown
-
+import requests
 
 st.title("Welcome to the DR Classification App")
 
@@ -72,19 +72,28 @@ severity_levels = ["No_DR", "Mild", "Moderate", "Proliferate_DR", "Severe"]
 #     st.write(f'Test loss: {test_loss:.4f}')
 
 
-def download_model_from_drive():
-    file_id = "1RIeCpOTzQTrTKE-jT-Vtpjx5vlsRRzoP"  # Replace with your file ID
-    url = f"https://drive.google.com/uc?id={file_id}"
-    output = "dr_classification_model.h5"
+# def download_model_from_drive():
+#     file_id = "1RIeCpOTzQTrTKE-jT-Vtpjx5vlsRRzoP"  # Replace with your file ID
+#     url = f"https://drive.google.com/uc?id={file_id}"
+#     output = "dr_classification_model.h5"
 
-    if not os.path.exists(output):
-        with st.spinner('Downloading Latest model...'):
-            gdown.download(url, output, quiet=False)
-            st.success("Download complete")
-    return output
+#     if not os.path.exists(output):
+#         with st.spinner('Downloading Latest model...'):
+#             gdown.download(url, output, quiet=False)
+#             st.success("Download complete")
+#     return output
 
 
-model_file = download_model_from_drive() 
+# model_file = download_model_from_drive() 
+
+
+url = "https://detectionmodel.s3.us-east-1.amazonaws.com/dr_classification_model.h5"
+model_path = "dr_classification_model.h5"
+
+if not os.path.exists(model_path):
+    with open(model_path, "wb") as f:
+        response = requests.get(url)
+        f.write(response.content)
 
 def test_model(model_name, test_dir):
     with st.spinner('Wait for it...'):
