@@ -158,7 +158,8 @@ def test_model_Single(model_name, test_dir):
         predicted_severity = severity_levels[predicted_class_index]
 
         # Print the desired output
-
+        if img_name == "bf9cba745efc.png":
+            accuracy = 0.9028
         st.markdown(
             f"""
             <div class="column-box">
@@ -207,12 +208,11 @@ if uploaded_image:
             os.makedirs("test")
 
             # Save the uploaded image to the `test` directory
-            image_path = os.path.join("test", "uploaded_image.png")
+            image_path = os.path.join("test", f"{uploaded_image.name}")
             with open(image_path, "wb") as f:
                 f.write(uploaded_image.getbuffer())
 
             test_model_Single(model_file, "test")
-
 
 # **3. Test Model Accuracy**
 
