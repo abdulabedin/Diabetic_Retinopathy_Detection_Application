@@ -104,8 +104,8 @@ def test_model(model_name, test_dir):
                 <ul>
                 <li>
                     <strong>Image:</strong> {image_path} |
-                    <strong>Actual Category:</strong> {actual_class} |
-                    <strong>Predicted Category:</strong> {predicted_class} |
+                    <strong>Actual Category:</strong> {actual} |
+                    <strong>Predicted Category:</strong> {predicted} |
                     <strong>Confidence:</strong> {confidence:.2%}
                 </li>
                 </ul>
