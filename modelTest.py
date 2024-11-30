@@ -256,7 +256,7 @@ model_file = "dr_classification_model.h5"
 
 # **1. Sample Prediction**
 st.header("Sample Prediction")
-st.image("0dc031c94225-gamma.png", caption="Sample Image")
+st.image("bf9cba745efc.png", caption="Sample Image")
 if st.button("Run Prediction", key="sample"):
      with st.spinner('Running prediction on the sample image...'):
         if os.path.exists("test"):
@@ -266,7 +266,7 @@ if st.button("Run Prediction", key="sample"):
 
             # Save the uploaded image to the `test` directory
         image_path = os.path.join("test", "uploaded_image.png")
-        shutil.copy("0dc031c94225-gamma.png", image_path)
+        shutil.copy("bf9cba745efc.png", image_path)
 
         model_file = "dr_classification_model.h5"  # Replace with your model file path
         test_model_Single(model_file, "test")
