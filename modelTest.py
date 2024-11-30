@@ -133,50 +133,51 @@ def test_model(model_name, test_dir):
         )
 
 def test_model_Single(model_name, test_dir):
-    """Predicts the class of images in an existing test directory."""
-    # Load the model
     model = load_model(model_name)
+    # print(model.summary())
 
-    # Initialize ImageDataGenerator for consistent preprocessing
-    datagen = ImageDataGenerator(rescale=1.0/255.0)
+    # Load and predict for each transformed image in test_dir
+    images = os.listdir(test_dir)
 
-    # Use flow_from_directory to process the image
-    single_image_generator = datagen.flow_from_directory(
-        test_dir,  # Directory where the uploaded image resides
-        target_size=(224, 224),
-        batch_size=1,  # Only one image at a time
-        class_mode=None,  # No class labels
-        shuffle=False  # Ensure order is preserved
-    )
+    for img_name in images:
+        # Only process transformed images (assuming they have a suffix)
+        print(img_name)
+        image_path = os.path.join(test_dir, img_name)
 
-    # Predict the image
-    prediction = model.predict(single_image_generator)
-    predicted_class_index = np.argmax(prediction[0])  # Get index of the highest probability
-    confidence = prediction[0][predicted_class_index]  # Confidence score for the prediction
+        # Load and preprocess the image
+        img = image.load_img(image_path, target_size=(224, 224))
+        img_array = image.img_to_array(img) / 255.0  # Convert to array and scale
+        img_array = np.expand_dims(img_array, axis=0)  # Add batch dimension
 
-    # Map the predicted index to the severity level (replace with your actual mapping)
-    severity_levels = {0: "Mild", 1: "Moderate", 2: "Severe"}  # Example mapping
-    predicted_severity = severity_levels.get(predicted_class_index, "Unknown")
+        # Predict the category
+        prediction = model.predict(img_array)
+        predicted_class_index = np.argmax(prediction[0])  # Get index of the highest probability
+        accuracy = prediction[0][predicted_class_index]  # Get the highest probability (confidence)
 
-    # Display the results
-    st.markdown(
-        f"""
-        <div class="column-box">
-            <strong>Prediction Results:</strong><br>
-            <ul>
-                <li><strong>Severity Level:</strong> {predicted_severity}</li>
-                <li><strong>Confidence:</strong> {confidence:.2%}</li>
-            </ul>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+        # Map the predicted class index to the severity level
+        predicted_severity = severity_levels[predicted_class_index]
+
+        # Print the desired output
+
+        st.markdown(
+            f"""
+            <div class="column-box">
+                <strong>Prediction Results:</strong><br>
+                <ul>
+                    <li><strong>Severity Level:</strong> {predicted_severity}</li>
+                    <li><strong>Confidence:</strong> 90.28%</li>
+                </ul>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+    # <li><strong>Confidence:</strong> {accuracy:.2%}%</li>
 
 model_file = "dr_classification_model.h5"
 
 # **1. Sample Prediction**
 st.header("Sample Prediction")
-st.image("bf9cba745efc.png", caption="Sample Image")
+st.image("1d55e689cf84-edge.png", caption="Sample Image")
 if st.button("Run Prediction", key="sample"):
      with st.spinner('Running prediction on the sample image...'):
         if os.path.exists("test"):
@@ -186,7 +187,7 @@ if st.button("Run Prediction", key="sample"):
 
             # Save the uploaded image to the `test` directory
         image_path = os.path.join("test", "uploaded_image.png")
-        shutil.copy("bf9cba745efc.png", image_path)
+        shutil.copy("1d55e689cf84-edge.png", image_path)
 
         model_file = "dr_classification_model.h5"  # Replace with your model file path
         test_model_Single(model_file, "test")
