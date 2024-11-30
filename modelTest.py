@@ -247,7 +247,7 @@ st.text("")
 st.text("")
 st.text("")
 
-st.link_button("Go to Model", "https://www.kaggle.com/code/abdulabedin/cps843-project/edit")
+st.link_button("Go to Model", "https://www.kaggle.com/code/panchofernandez/cps843-diabetic-retinopathy-detection")
 
 
 url = "https://detectionmodel.s3.us-east-1.amazonaws.com/dr_classification_model.h5"
