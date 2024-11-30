@@ -166,13 +166,12 @@ def test_model_Single(model_name, test_dir):
                 <strong>Prediction Results:</strong><br>
                 <ul>
                     <li><strong>Severity Level:</strong> {predicted_severity}</li>
-                    <li><strong>Confidence:</strong> 90.28%</li>
+                    <li><strong>Confidence:</strong> {accuracy:.2%}%</li>
                 </ul>
             </div>
             """,
             unsafe_allow_html=True,
         )
-    # <li><strong>Confidence:</strong> {accuracy:.2%}%</li>
 
 model_file = "dr_classification_model.h5"
 
