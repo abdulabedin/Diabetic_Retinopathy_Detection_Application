@@ -65,6 +65,74 @@ def extract_images(zip_path, extract_to, valid_extensions):
                 # Extract the file while preserving the subdirectory structure
                 zip_ref.extract(file, extract_to)
 
+def test_model(model_name, test_dir):
+    with st.spinner('Evaluating model accuracy on uploaded images...'):
+        # Load the model
+        model = load_model(model_name)
+
+        # Create the test data generator with only rescaling
+        test_datagen = ImageDataGenerator(rescale=1.0/255.0)
+
+        # Create the test generator
+        test_generator = test_datagen.flow_from_directory(
+            test_dir,
+            target_size=(224, 224),
+            batch_size=32,
+            class_mode='categorical',
+            shuffle=False  # No shuffling for evaluation
+        )
+
+        # Predict on the test set
+        predictions = model.predict(test_generator, steps=test_generator.samples // test_generator.batch_size + 1)
+        predicted_classes = np.argmax(predictions, axis=1)  # Get the indices of the highest predicted probability
+        actual_classes = test_generator.classes  # True class indices
+        class_labels = list(test_generator.class_indices.keys())  # Map indices to class labels
+
+        # Generate a detailed report for each image
+        results = []
+        for i, image_path in enumerate(test_generator.filenames):
+            actual_class = class_labels[actual_classes[i]]
+            predicted_class = class_labels[predicted_classes[i]]
+            confidence = predictions[i][predicted_classes[i]]
+            results.append((image_path, actual_class, predicted_class, confidence))
+
+        # Display the results
+        st.write("Prediction Results:")
+        for image_path, actual, predicted, confidence in results:
+                   st.markdown(
+            f"""
+            <div class="column-box">
+                <ul>
+                <li>
+                    <strong>Image:</strong> {image_path} |
+                    <strong>Actual Category:</strong> {actual_class} |
+                    <strong>Predicted Category:</strong> {predicted_class} |
+                    <strong>Confidence:</strong> {confidence:.2%}
+                </li>
+                </ul>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+            # st.write(f"Image: {image_path}, Actual Category: {actual}, Predicted Category: {predicted}, Confidence: {confidence:.2%}")
+            # st.write("---")
+
+        # Calculate and display overall accuracy and loss
+        test_loss, test_accuracy = model.evaluate(test_generator, steps=test_generator.samples // 32)
+
+        st.markdown(
+            f"""
+            <div class="column-box">
+                <ul>
+                    <li><strong>Test accuracy:</strong> {test_accuracy:.4f}</li>
+                    <li><strong>Test loss:</strong> {test_loss:.4f}%</li>
+                </ul>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+
 def test_model_Single(model_name, test_dir):
     model = load_model(model_name)
     # print(model.summary())
