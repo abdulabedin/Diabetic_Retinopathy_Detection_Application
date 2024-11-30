@@ -132,69 +132,45 @@ def test_model(model_name, test_dir):
             unsafe_allow_html=True,
         )
 
+def test_model_Single(model_name, test_dir):
+    """Predicts the class of images in an existing test directory."""
+    # Load the model
+    model = load_model(model_name)
 
-def create_temp_folder(image_file):
-    """Creates a temporary folder to house the uploaded image."""
-    temp_dir = "temp_image_folder"
-    image_dir = os.path.join(temp_dir, "images")  # Subdirectory for images
-    os.makedirs(image_dir, exist_ok=True)
+    # Initialize ImageDataGenerator for consistent preprocessing
+    datagen = ImageDataGenerator(rescale=1.0/255.0)
 
-    # Save the uploaded file to the temp folder
-    image_path = os.path.join(image_dir, image_file.name)
-    with open(image_path, "wb") as f:
-        f.write(image_file.read())
+    # Use flow_from_directory to process the image
+    single_image_generator = datagen.flow_from_directory(
+        test_dir,  # Directory where the uploaded image resides
+        target_size=(224, 224),
+        batch_size=1,  # Only one image at a time
+        class_mode=None,  # No class labels
+        shuffle=False  # Ensure order is preserved
+    )
 
-    return temp_dir
+    # Predict the image
+    prediction = model.predict(single_image_generator)
+    predicted_class_index = np.argmax(prediction[0])  # Get index of the highest probability
+    confidence = prediction[0][predicted_class_index]  # Confidence score for the prediction
 
-def test_model_Single(model_name, uploaded_file):
-    """Predicts the class of a single uploaded image."""
-    if uploaded_file is not None:
-        # Load the model
-        model = load_model(model_name)
+    # Map the predicted index to the severity level (replace with your actual mapping)
+    severity_levels = {0: "Mild", 1: "Moderate", 2: "Severe"}  # Example mapping
+    predicted_severity = severity_levels.get(predicted_class_index, "Unknown")
 
-        # Create a temporary folder for the uploaded image
-        temp_folder = create_temp_folder(uploaded_file)
-
-        try:
-            # Initialize ImageDataGenerator for consistent preprocessing
-            datagen = ImageDataGenerator(rescale=1.0/255.0)
-
-            # Use flow_from_directory to process the image
-            single_image_generator = datagen.flow_from_directory(
-                temp_folder,
-                target_size=(224, 224),
-                batch_size=1,  # Only one image
-                class_mode=None,  # No class labels needed
-                shuffle=False
-            )
-
-            # Predict the image
-            prediction = model.predict(single_image_generator)
-            predicted_class_index = np.argmax(prediction[0])  # Get index of the highest probability
-            confidence = prediction[0][predicted_class_index]  # Confidence score for the prediction
-
-            # Map the predicted index to the severity level (replace with your actual mapping)
-            severity_levels = {0: "Mild", 1: "Moderate", 2: "Severe"}  # Example mapping
-            predicted_severity = severity_levels.get(predicted_class_index, "Unknown")
-
-            # Display the results
-            st.markdown(
-                f"""
-                <div class="column-box">
-                    <strong>Prediction Results:</strong><br>
-                    <ul>
-                        <li><strong>Severity Level:</strong> {predicted_severity}</li>
-                        <li><strong>Confidence:</strong> {confidence:.2%}</li>
-                    </ul>
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
-
-        finally:
-            # Clean up the temporary folder
-            shutil.rmtree(temp_folder)
-
+    # Display the results
+    st.markdown(
+        f"""
+        <div class="column-box">
+            <strong>Prediction Results:</strong><br>
+            <ul>
+                <li><strong>Severity Level:</strong> {predicted_severity}</li>
+                <li><strong>Confidence:</strong> {confidence:.2%}</li>
+            </ul>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
 model_file = "dr_classification_model.h5"
 
