@@ -158,8 +158,6 @@ def test_model_Single(model_name, test_dir):
         predicted_severity = severity_levels[predicted_class_index]
 
         # Print the desired output
-        if img_name == "bf9cba745efc.png":
-            accuracy = 0.9028
         st.markdown(
             f"""
             <div class="column-box">
